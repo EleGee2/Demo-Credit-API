@@ -168,6 +168,19 @@ export class WalletService {
     return trx('wallets').where('user_id', userId).first();
   }
 
+  private async updateSenderWalletBalance(
+    trx: Knex.Transaction,
+    walletId: string,
+    amount: number,
+  ) {
+    await trx('wallets')
+      .where('id', walletId)
+      .update({
+        ledger_balance: trx.raw('ledger_balance - ?', [amount]),
+        available_balance: trx.raw('available_balance - ?', [amount]),
+      });
+  }
+
   async transferFunds(senderId: string, receiverId: string, amount: number) {
     return this.knex.transaction(async (trx) => {
       const senderWallet = await this.getWallet(senderId, trx);
@@ -193,12 +206,7 @@ export class WalletService {
         amount,
       });
 
-      await trx('wallets')
-        .where('id', senderWallet.id)
-        .update({
-          ledger_balance: trx.raw('ledger_balance - ?', [amount]),
-          available_balance: trx.raw('available_balance - ?', [amount]),
-        });
+      await this.updateSenderWalletBalance(trx, senderWallet.id, amount);
       await this.updateWalletBalance(receiverWallet.id, amount, trx);
 
       await this.createDebitLedgerEntry({
@@ -235,15 +243,7 @@ export class WalletService {
       if (wallet.available_balance < amount) {
         throw new BadRequestException('Insufficient available balance');
       }
-      const prevBal = wallet.ledger_balance;
-      const newBal = prevBal - amount;
-
-      await trx('wallets')
-        .where('user_id', userId)
-        .update({
-          ledger_balance: newBal,
-          available_balance: trx.raw('available_balance - ?', [amount]),
-        });
+      await this.updateSenderWalletBalance(trx, wallet.id, amount);
 
       const transactionId = await this.createTransaction({
         walletId: wallet.id,
