@@ -9,6 +9,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { ProviderModule } from './provider/provider.module';
 import { WalletModule } from './wallet/wallet.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -20,5 +21,6 @@ import { WalletModule } from './wallet/wallet.module';
     ProviderModule,
     WalletModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}
