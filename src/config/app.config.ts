@@ -56,6 +56,7 @@ const configSchema = Joi.object({
   DATABASE_HOST: Joi.string().required(),
   DATABASE_USER: Joi.string().required(),
   DATABASE_PASSWORD: Joi.string().required(),
+  DATABASE_PORT: Joi.number().required(),
   DATABASE_NAME: Joi.string().required(),
   DATABASE_POOL_MIN: Joi.number().default(2),
   DATABASE_POOL_MAX: Joi.number().default(10),
